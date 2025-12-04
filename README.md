@@ -21,7 +21,19 @@ source venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 ```
 
-## AWS Configuration
+## Getting Started
+
+### Prerequisites
+
+⚠️ **MIMIC Data Access Required**: This project requires credentialed access to MIMIC-III/IV datasets.
+
+**Don't have access yet?** See **[MIMIC_ACCESS_GUIDE.md](MIMIC_ACCESS_GUIDE.md)** for step-by-step instructions on:
+- Getting PhysioNet credentials
+- Completing CITI training
+- Setting up AWS Athena access
+- Alternative data access methods
+
+### AWS Configuration
 
 This project uses Amazon Athena to query MIMIC data. Configure your AWS credentials:
 
@@ -30,7 +42,7 @@ aws configure
 # Enter your AWS Access Key ID, Secret Access Key, and region
 ```
 
-Ensure you have access to the PhysioNet MIMIC data on AWS.
+Ensure you have access to the PhysioNet MIMIC data on AWS. See `MIMIC_ACCESS_GUIDE.md` for details.
 
 ## Project Structure
 
