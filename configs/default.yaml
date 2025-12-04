@@ -1,0 +1,104 @@
+# Default configuration for ICD code prediction experiments
+
+# Data settings
+data:
+  mimic3_database: "mimiciii"
+  mimic4_database: "mimiciv"
+  athena_output_bucket: "s3://your-bucket/athena-results/"
+  raw_data_dir: "data/raw/"
+  processed_data_dir: "data/processed/"
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  random_seed: 42
+
+# Label settings
+labels:
+  top_k_codes: 50  # Start with top-50 most frequent codes
+  min_code_frequency: 10  # Minimum occurrences for a code to be included
+  use_full_codes: false  # Set true for full ~8900 codes
+
+# Preprocessing
+preprocessing:
+  max_length_caml: 4096
+  max_length_led: 16384
+  lowercase: true
+  remove_deidentified: true  # Remove [**...**] placeholders
+  remove_numbers: false
+  preserve_sections: true
+
+# CAML model
+caml:
+  embedding_dim: 300
+  num_filters: 256
+  filter_sizes: [3, 5, 7]
+  dropout: 0.2
+  use_pretrained_embeddings: false  # Set true to use BioWordVec
+
+# LED model
+led:
+  model_name: "allenai/led-base-16384"
+  hidden_dim: 768
+  dropout: 0.1
+  freeze_layers: 6  # Freeze bottom N layers
+  use_global_attention: true
+
+# Training
+training:
+  # CAML training
+  caml:
+    batch_size: 32
+    learning_rate: 0.001
+    weight_decay: 0.00001
+    epochs: 50
+    patience: 5  # Early stopping patience
+    gradient_clip: 1.0
+  
+  # LED training
+  led:
+    batch_size: 4
+    gradient_accumulation_steps: 8  # Effective batch size = 32
+    learning_rate: 0.00002
+    weight_decay: 0.01
+    epochs: 10
+    patience: 3
+    warmup_ratio: 0.1
+    gradient_clip: 1.0
+  
+  # Common settings
+  mixed_precision: true
+  num_workers: 4
+  pin_memory: true
+
+# Evaluation
+evaluation:
+  precision_at_k: [5, 10]
+  compute_roc_auc: true
+  stratified_analysis: true
+  frequency_bins:
+    head: 1000  # Codes appearing >= 1000 times
+    medium: 100  # Codes appearing >= 100 times
+    tail: 0     # All other codes
+
+# Interpretability
+interpretability:
+  top_k_tokens: 50  # Number of top tokens to highlight
+  attention_entropy: true
+  integrated_gradients:
+    n_steps: 50
+    internal_batch_size: 8
+  highlight_overlap:
+    sections: ["HISTORY OF PRESENT ILLNESS", "HOSPITAL COURSE", "DISCHARGE DIAGNOSIS", "MEDICATIONS"]
+
+# Logging and checkpoints
+logging:
+  use_wandb: false
+  project_name: "icd-prediction"
+  log_every_n_steps: 100
+  checkpoint_dir: "checkpoints/"
+  save_top_k: 3
+
+# Hardware
+hardware:
+  device: "cuda"  # or "cpu", "mps"
+  seed: 42
