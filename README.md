@@ -23,15 +23,6 @@ pip install -r requirements.txt
 
 ## Getting Started
 
-### Prerequisites
-
-⚠️ **MIMIC Data Access Required**: This project requires credentialed access to MIMIC-III/IV datasets.
-
-**Don't have access yet?** See **[MIMIC_ACCESS_GUIDE.md](MIMIC_ACCESS_GUIDE.md)** for step-by-step instructions on:
-- Getting PhysioNet credentials
-- Completing CITI training
-- Setting up AWS Athena access
-- Alternative data access methods
 
 ### AWS Configuration
 

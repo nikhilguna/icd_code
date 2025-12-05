@@ -1,0 +1,28 @@
+ROW_ID,ICD9_CODE,SHORT_TITLE,LONG_TITLE
+1,4019,Hypertension NOS,Unspecified essential hypertension
+2,41071,AMI anterior wall,Acute myocardial infarction of anterolateral wall
+3,41401,Cor ath native vess,Coronary atherosclerosis of native coronary artery
+4,42731,Atrial fibrillation,Atrial fibrillation
+5,4280,CHF NOS,Congestive heart failure unspecified
+6,4809,Pneumonia organism NOS,Pneumonia organism unspecified
+7,49390,Asthma unspecified,Asthma unspecified type
+8,49320,Chr obst asth w(ac)exac,Chronic obstructive asthma with acute exacerbation
+9,51881,Acute respiratry failure,Acute respiratory failure
+10,4928,Respiratory failure NEC,Other respiratory failure
+11,25000,DMII wo cmp nt st uncntr,Diabetes mellitus without complication
+12,2724,Hyperlipidemia NEC/NOS,Other and unspecified hyperlipidemia
+13,2762,Acidosis,Metabolic acidosis
+14,2780,Obesity unspecified,Obesity unspecified
+15,5849,Acute kidney failure NOS,Acute kidney failure unspecified
+16,5859,Chronic kidney dis NOS,Chronic kidney disease unspecified
+17,99592,Severe sepsis,Severe sepsis
+18,0389,Septicemia NOS,Unspecified septicemia
+19,2851,Ac posthemorrhag anemia,Acute posthemorrhagic anemia
+20,2859,Anemia NOS,Anemia unspecified
+21,5789,GI hemorrhage NOS,Gastrointestinal hemorrhage unspecified
+22,5715,Cirrhosis of liver NOS,Cirrhosis of liver without alcohol
+23,53081,GERD,Esophageal reflux
+24,78039,Convulsions NEC,Other convulsions
+25,43491,CVA,Cerebral artery occlusion with infarction
+26,5990,UTI NOS,Urinary tract infection site not specified
+27,V4582,Status post PTCA,Percutaneous transluminal coronary angioplasty status
