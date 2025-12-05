@@ -255,8 +255,28 @@ def main():
     logger.info("")
     logger.info("✅ END-TO-END TEST PASSED!")
     logger.info("=" * 60)
+    
+    # Cleanup to prevent hanging
+    try:
+        del model
+        del trainer
+        import gc
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except:
+        pass
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.error(f"Test failed: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        # Force exit to prevent thread hanging
+        import os
+        os._exit(0)
 

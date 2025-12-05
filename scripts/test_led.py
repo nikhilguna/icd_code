@@ -355,9 +355,25 @@ def main():
     print("\nNext steps:")
     print("  python scripts/test_training.py --model led --data-dir mock_data/raw/")
     
+    # Cleanup to prevent hanging
+    try:
+        # Delete model to free memory and close threads
+        del model
+        # Force garbage collection
+        import gc
+        gc.collect()
+        # Clear CUDA cache if using GPU
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except:
+        pass
+    
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    exit_code = main()
+    # Force exit to prevent thread hanging
+    import os
+    os._exit(exit_code)
 

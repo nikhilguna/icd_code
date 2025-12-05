@@ -324,9 +324,21 @@ def main():
     print("\nNext steps:")
     print("  python scripts/test_led.py --num-labels", args.num_labels)
     
+    # Cleanup to prevent hanging
+    try:
+        del model
+        import gc
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except:
+        pass
+    
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    exit_code = main()
+    import os
+    os._exit(exit_code)
 
