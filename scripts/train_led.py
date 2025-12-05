@@ -163,7 +163,7 @@ def main():
     # Evaluate on test set
     logger.info("Evaluating on test set...")
     model.load_state_dict(
-        torch.load(Path(args.output_dir) / "best_model.pt")["model_state_dict"]
+        torch.load(Path(args.output_dir) / "best_model.pt", weights_only=False)["model_state_dict"]
     )
     
     test_results = evaluate_model(model, test_loader, args.device)

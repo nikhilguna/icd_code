@@ -21,6 +21,7 @@ import json
 import logging
 import sys
 from pathlib import Path
+from typing import Optional
 
 import torch
 import pandas as pd
@@ -43,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 def load_model(model_type: str, checkpoint_path: str, num_labels: int, device: str):
     """Load model from checkpoint."""
-    checkpoint = torch.load(checkpoint_path, map_location=device)
+    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
     
     if model_type == "caml":
         from transformers import AutoTokenizer
