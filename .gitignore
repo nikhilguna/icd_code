@@ -72,3 +72,6 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
+# Model checkpoints (can be large)
+checkpoints/
+
