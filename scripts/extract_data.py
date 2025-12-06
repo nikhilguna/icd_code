@@ -39,9 +39,9 @@ def main():
     
     parser.add_argument(
         "--source",
-        choices=["athena", "local"],
-        default="athena",
-        help="Data source: 'athena' for AWS Athena, 'local' for CSV files"
+        choices=["local", "athena"],
+        default="local",
+        help="Data source: 'local' for CSV files (default), 'athena' for AWS Athena"
     )
     parser.add_argument(
         "--dataset",
@@ -78,12 +78,17 @@ def main():
     parser.add_argument(
         "--notes-csv",
         type=str,
-        help="Path to NOTEEVENTS.csv or discharge.csv (required for --source local)"
+        help="Path to NOTEEVENTS.csv or discharge.csv (default: MIMIC_DATA/MIMIC-III/NOTEEVENTS.csv.gz)"
     )
     parser.add_argument(
         "--diagnoses-csv",
         type=str,
-        help="Path to DIAGNOSES_ICD.csv (required for --source local)"
+        help="Path to DIAGNOSES_ICD.csv (default: MIMIC_DATA/MIMIC-III/DIAGNOSES_ICD.csv.gz)"
+    )
+    parser.add_argument(
+        "--data-dir",
+        type=str,
+        help="Directory containing MIMIC data files (alternative to specifying individual files)"
     )
     
     # Optional arguments
@@ -100,6 +105,31 @@ def main():
     )
     
     args = parser.parse_args()
+    
+    # Set default paths for local data
+    if args.source == "local":
+        if args.data_dir:
+            # Use data directory structure
+            if args.dataset == "mimic3":
+                notes_default = Path(args.data_dir) / "NOTEEVENTS.csv.gz"
+                diagnoses_default = Path(args.data_dir) / "DIAGNOSES_ICD.csv.gz"
+            else:
+                notes_default = Path(args.data_dir) / "discharge.csv.gz"
+                diagnoses_default = Path(args.data_dir) / "diagnoses_icd.csv.gz"
+        else:
+            # Use default MIMIC_DATA structure
+            if args.dataset == "mimic3":
+                notes_default = Path("MIMIC_DATA/MIMIC-III/NOTEEVENTS.csv.gz")
+                diagnoses_default = Path("MIMIC_DATA/MIMIC-III/DIAGNOSES_ICD.csv.gz")
+            else:
+                notes_default = Path("MIMIC_DATA/MIMIC-IV/discharge.csv.gz")
+                diagnoses_default = Path("MIMIC_DATA/MIMIC-IV/diagnoses_icd.csv.gz")
+        
+        # Use defaults if not specified
+        if not args.notes_csv:
+            args.notes_csv = str(notes_default)
+        if not args.diagnoses_csv:
+            args.diagnoses_csv = str(diagnoses_default)
     
     # Set default database names
     if args.database is None:
@@ -143,8 +173,21 @@ def main():
     else:  # local
         if not args.notes_csv or not args.diagnoses_csv:
             parser.error(
-                "--notes-csv and --diagnoses-csv are required when using --source local"
+                "--notes-csv and --diagnoses-csv are required when using --source local\n"
+                f"Defaults: notes={args.notes_csv}, diagnoses={args.diagnoses_csv}"
             )
+        
+        # Check if files exist
+        if not Path(args.notes_csv).exists():
+            logger.error(f"Notes file not found: {args.notes_csv}")
+            parser.error(f"Notes file does not exist: {args.notes_csv}")
+        if not Path(args.diagnoses_csv).exists():
+            logger.error(f"Diagnoses file not found: {args.diagnoses_csv}")
+            parser.error(f"Diagnoses file does not exist: {args.diagnoses_csv}")
+        
+        logger.info(f"Using local files:")
+        logger.info(f"  Notes: {args.notes_csv}")
+        logger.info(f"  Diagnoses: {args.diagnoses_csv}")
         
         df = extract_mimic_data_local(
             notes_csv=args.notes_csv,

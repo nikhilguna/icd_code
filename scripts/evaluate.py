@@ -44,7 +44,8 @@ logger = logging.getLogger(__name__)
 
 def load_model(model_type: str, checkpoint_path: str, num_labels: int, device: str):
     """Load model from checkpoint."""
-    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
+    # Load checkpoint to CPU first to avoid MPS device mapping issues
+    checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
     
     if model_type == "caml":
         from transformers import AutoTokenizer
@@ -139,7 +140,8 @@ def main():
     parser.add_argument("--encoder", type=str, help="Path to label encoder")
     parser.add_argument("--output-dir", type=str, default="results")
     parser.add_argument("--batch-size", type=int, default=16)
-    parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--device", type=str, default="auto",
+                        help="Device: 'auto' (default), 'mps', 'cuda', or 'cpu'")
     parser.add_argument("--top-k-codes", type=int, default=50)
     parser.add_argument("--max-length", type=int, default=4096)
     
@@ -149,6 +151,20 @@ def main():
     parser.add_argument("--target-data", type=str, help="Target dataset (MIMIC-IV)")
     
     args = parser.parse_args()
+    
+    # Auto-detect best device
+    if args.device == "auto":
+        if torch.backends.mps.is_available():
+            args.device = "mps"
+            logger.info("Auto-detected device: MPS (Apple Silicon GPU)")
+        elif torch.cuda.is_available():
+            args.device = "cuda"
+            logger.info("Auto-detected device: CUDA (NVIDIA GPU)")
+        else:
+            args.device = "cpu"
+            logger.info("Auto-detected device: CPU")
+    else:
+        logger.info(f"Using specified device: {args.device}")
     
     # Load label encoder
     if args.encoder:

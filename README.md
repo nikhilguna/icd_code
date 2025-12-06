@@ -23,27 +23,34 @@ pip install -r requirements.txt
 
 ## Getting Started
 
+### Data Preparation
 
-### AWS Configuration
+This project uses local MIMIC-III/IV data files. You need PhysioNet credentialed access to MIMIC:
 
-This project uses Amazon Athena to query MIMIC data. Configure your AWS credentials:
+1. **Apply for MIMIC Access** (see `MIMIC_ACCESS_GUIDE.md`)
+2. **Download MIMIC Data** to `MIMIC_DATA/` directory
+3. **Process Data** into training format
 
 ```bash
-aws configure
-# Enter your AWS Access Key ID, Secret Access Key, and region
-```
+# Process MIMIC-III data (full dataset)
+python scripts/process_mimic3_local.py --output data/processed/mimic3_full.parquet
 
-Ensure you have access to the PhysioNet MIMIC data on AWS. See `MIMIC_ACCESS_GUIDE.md` for details.
+# Or process a smaller sample for testing
+python scripts/process_mimic3_local.py --output data/processed/mimic3_test.parquet --limit 5000
+```
 
 ## Project Structure
 
 ```
 icd/
 ├── data/                    # Data extraction and preprocessing
-│   ├── athena_extraction.py # SQL queries for MIMIC via Athena
 │   ├── preprocessing.py     # Text cleaning, section parsing
+│   ├── enhanced_preprocessing.py  # Advanced clinical NLP
+│   ├── clinical_tokenizer.py      # Clinical sentence tokenization
+│   ├── hierarchical_encoder.py    # Hierarchical ICD encoding
 │   ├── dataset.py           # PyTorch Dataset classes
-│   └── label_encoder.py     # Multi-label binarization
+│   ├── label_encoder.py     # Multi-label binarization
+│   └── athena_extraction.py # Data loading utilities (local & AWS)
 ├── models/                  # Model architectures
 │   ├── caml.py              # CAML implementation
 │   └── led_classifier.py    # LED classifier
@@ -53,45 +60,77 @@ icd/
 ├── evaluation/              # Evaluation metrics
 │   ├── metrics.py           # F1, P@k, ROC-AUC
 │   └── cross_dataset.py     # Cross-dataset evaluation
-├── interpretability/        # Interpretability analysis
-│   ├── attention_analysis.py
-│   ├── integrated_gradients.py
-│   └── heatmaps.py
 ├── utils/                   # Utilities
 │   └── config.py            # Configuration management
 ├── configs/                 # Experiment configs
 │   └── default.yaml
-└── scripts/                 # Executable scripts
-    ├── extract_data.py
-    ├── train_caml.py
-    ├── train_led.py
-    └── evaluate.py
+├── scripts/                 # Executable scripts
+│   ├── process_mimic3_local.py  # Process local MIMIC-III data
+│   ├── train_caml.py
+│   ├── train_led.py
+│   └── evaluate.py
+├── MIMIC_DATA/             # Local MIMIC data (git-ignored)
+│   ├── MIMIC-III/
+│   │   ├── NOTEEVENTS.csv.gz
+│   │   ├── DIAGNOSES_ICD.csv.gz
+│   │   └── ...
+│   └── MIMIC-IV/
+│       ├── discharge.csv.gz  (when available)
+│       ├── diagnoses_icd.csv.gz
+│       └── ...
+└── data/processed/          # Processed parquet files
+    ├── mimic3_full.parquet
+    └── mimic3_test.parquet
 ```
 
 ## Usage
 
-### 1. Extract Data from MIMIC
+### 1. Process Local MIMIC Data
 
 ```bash
-python scripts/extract_data.py --dataset mimic3 --output data/raw/
+# Process full MIMIC-III dataset
+python scripts/process_mimic3_local.py \
+    --output data/processed/mimic3_full.parquet
+
+# Process test subset (5000 samples)
+python scripts/process_mimic3_local.py \
+    --output data/processed/mimic3_test.parquet \
+    --limit 5000
 ```
 
 ### 2. Train CAML Model
 
 ```bash
-python scripts/train_caml.py --config configs/default.yaml
+python scripts/train_caml.py \
+    --data data/processed/mimic3_full.parquet \
+    --output-dir checkpoints/caml_mimic3 \
+    --epochs 50 \
+    --batch-size 32 \
+    --top-k-codes 50 \
+    --device cuda
 ```
 
 ### 3. Train LED Model
 
 ```bash
-python scripts/train_led.py --config configs/default.yaml
+python scripts/train_led.py \
+    --data data/processed/mimic3_full.parquet \
+    --output-dir checkpoints/led_mimic3 \
+    --epochs 10 \
+    --batch-size 4 \
+    --gradient-accumulation 8 \
+    --top-k-codes 50 \
+    --device cuda
 ```
 
 ### 4. Evaluate Models
 
 ```bash
-python scripts/evaluate.py --model caml --checkpoint checkpoints/caml_best.pt
+python scripts/evaluate.py \
+    --model caml \
+    --checkpoint checkpoints/caml_mimic3/best_model.pt \
+    --data data/processed/mimic3_full.parquet \
+    --output-dir results/caml_mimic3
 ```
 
 ## Evaluation Metrics

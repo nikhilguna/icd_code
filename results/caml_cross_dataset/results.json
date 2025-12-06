@@ -1,0 +1,17 @@
+{
+  "micro_f1": 0.0,
+  "macro_f1": 0.0,
+  "micro_precision": 0.0,
+  "micro_recall": 0.0,
+  "macro_precision": 0.0,
+  "macro_recall": 0.0,
+  "precision_at_5": 0.0,
+  "precision_at_10": 0.0,
+  "recall_at_5": 0.0,
+  "recall_at_10": 0.0,
+  "micro_auc": NaN,
+  "macro_auc": 0.0,
+  "head_f1": 0.0,
+  "medium_f1": 0.0,
+  "tail_f1": 0.0
+}

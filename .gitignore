@@ -2,6 +2,8 @@
 *.md
 *.MD
 !README.md
+MIMIC_DATA/
+wandb/
 
 # Virtual environment
 venv/

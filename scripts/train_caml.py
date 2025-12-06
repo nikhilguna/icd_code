@@ -45,17 +45,37 @@ def main():
     parser.add_argument("--embedding-dim", type=int, default=300)
     parser.add_argument("--num-filters", type=int, default=256)
     parser.add_argument("--dropout", type=float, default=0.2)
-    parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--device", type=str, default="auto", 
+                        help="Device: 'auto' (default), 'mps', 'cuda', or 'cpu'")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--resume", type=str, help="Resume from checkpoint")
-    parser.add_argument("--wandb", action="store_true", help="Log to W&B")
+    parser.add_argument("--wandb", action="store_true", default=True, 
+                        help="Log to W&B (default: True, use --no-wandb to disable)")
+    parser.add_argument("--no-wandb", dest="wandb", action="store_false",
+                        help="Disable W&B logging")
     
     args = parser.parse_args()
+    
+    # Auto-detect best device
+    if args.device == "auto":
+        if torch.backends.mps.is_available():
+            args.device = "mps"
+            logger.info("Auto-detected device: MPS (Apple Silicon GPU)")
+        elif torch.cuda.is_available():
+            args.device = "cuda"
+            logger.info("Auto-detected device: CUDA (NVIDIA GPU)")
+        else:
+            args.device = "cpu"
+            logger.info("Auto-detected device: CPU")
+    else:
+        logger.info(f"Using specified device: {args.device}")
     
     # Set seed
     torch.manual_seed(args.seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
+    if torch.backends.mps.is_available():
+        torch.mps.manual_seed(args.seed)
     
     # Load config if provided
     if args.config:
