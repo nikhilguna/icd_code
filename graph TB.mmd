@@ -1,0 +1,26 @@
+graph TB
+    A[Clinical Text Input<br/>Tokenized: up to 16K tokens] --> B[Longformer Encoder<br/>Pretrained allenai/longformer<br/>768d embeddings]
+    B --> C[Attention Mechanism<br/>Sliding Window 512 tokens<br/>+ Global on CLS]
+    C --> D[CLS Token Pooling<br/>Document representation<br/>h_CLS vector 768d]
+    D --> E[Classification Head<br/>Linear 768 to L + Sigmoid<br/>Multi-label output]
+    E --> F[Predicted ICD Codes<br/>y-hat in range 0,1]
+    
+    F --> G{Training?}
+    G -->|Yes| H[Compute Loss<br/>BCE Loss]
+    H --> I[Backpropagation<br/>Compute Gradients]
+    I --> J[Optimizer Update<br/>AdamW optimizer<br/>+ Layer Freezing 0-5]
+    J -->|Next Batch| A
+    
+    G -->|No| K[Return Predictions<br/>+ Attention Weights]
+    
+    style A fill:#e1f5ff,color:#000,stroke:#333,stroke-width:2px
+    style B fill:#f3e5f5,color:#000,stroke:#333,stroke-width:2px
+    style C fill:#ffe1e1,color:#000,stroke:#333,stroke-width:2px
+    style D fill:#fff9c4,color:#000,stroke:#333,stroke-width:2px
+    style E fill:#e0f2f1,color:#000,stroke:#333,stroke-width:2px
+    style F fill:#c8e6c9,color:#000,stroke:#333,stroke-width:2px
+    style G fill:#fce4ec,color:#000,stroke:#333,stroke-width:2px
+    style H fill:#ffccbc,color:#000,stroke:#333,stroke-width:2px
+    style I fill:#ffccbc,color:#000,stroke:#333,stroke-width:2px
+    style J fill:#ffccbc,color:#000,stroke:#333,stroke-width:2px
+    style K fill:#c8e6c9,color:#000,stroke:#333,stroke-width:2px

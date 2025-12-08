@@ -25,6 +25,7 @@ from typing import Optional
 
 import torch
 import pandas as pd
+from tqdm import tqdm
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -88,8 +89,10 @@ def evaluate_single_dataset(
     all_logits = []
     all_labels = []
     
+    logger.info(f"Evaluating on {len(dataloader)} batches...")
+    
     with torch.no_grad():
-        for batch in dataloader:
+        for batch in tqdm(dataloader, desc="Evaluating", unit="batch"):
             input_ids = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
             labels = batch["labels"]
@@ -140,6 +143,8 @@ def main():
     parser.add_argument("--encoder", type=str, help="Path to label encoder")
     parser.add_argument("--output-dir", type=str, default="results")
     parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--num-workers", type=int, default=0,
+                        help="DataLoader workers (0=single thread, recommended for MPS)")
     parser.add_argument("--device", type=str, default="auto",
                         help="Device: 'auto' (default), 'mps', 'cuda', or 'cpu'")
     parser.add_argument("--top-k-codes", type=int, default=50)
@@ -197,6 +202,7 @@ def main():
         _, _, source_test, _ = create_dataloaders(
             source_df, label_encoder, tokenizer_name,
             max_length=args.max_length, batch_size=args.batch_size,
+            num_workers=args.num_workers,
         )
         
         # Load target dataset
@@ -204,6 +210,7 @@ def main():
         _, _, target_test, _ = create_dataloaders(
             target_df, label_encoder, tokenizer_name,
             max_length=args.max_length, batch_size=args.batch_size,
+            num_workers=args.num_workers,
         )
         
         # Cross-dataset evaluation
@@ -234,6 +241,7 @@ def main():
         _, _, test_loader, _ = create_dataloaders(
             df, label_encoder, tokenizer_name,
             max_length=args.max_length, batch_size=args.batch_size,
+            num_workers=args.num_workers,
         )
         
         # Evaluate
