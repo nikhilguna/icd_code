@@ -77,3 +77,7 @@ Thumbs.db
 # Model checkpoints (can be large)
 checkpoints/
 
+# Processed data files (can be large)
+data/processed/*.parquet
+data/processed/mimic*_full.parquet
+
