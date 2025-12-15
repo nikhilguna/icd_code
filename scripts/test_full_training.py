@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.dataset import ICDDataset, create_dataloaders
 from data.label_encoder import ICDLabelEncoder
 from models.caml import CAML
-from models.led_classifier import LEDClassifier
+from models.longformer_classifier import LongformerClassifier
 from training.trainer import Trainer, create_optimizer, create_scheduler
 from training.losses import get_loss_function
 from evaluation.metrics import ICDMetrics, find_optimal_threshold
@@ -133,8 +133,8 @@ def main():
             dropout=0.2,
             pad_token_id=tokenizer.pad_token_id or 0,
         )
-    else:  # LED
-        model = LEDClassifier(
+    else:  # Longformer
+        model = LongformerClassifier(
             num_labels=label_encoder.num_labels,
             model_name=tokenizer_name,
             dropout=0.1,

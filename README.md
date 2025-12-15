@@ -4,10 +4,10 @@ Multi-label ICD code prediction from ICU discharge summaries using CAML and Long
 
 ## Project Overview
 
-This project implements automatic ICD code prediction from MIMIC-III/IV clinical discharge summaries, framing it as a multi-label text classification task. We compare:
+This project implements automatic ICD code prediction from MIMIC-III clinical discharge summaries, framing it as a multi-label text classification task. We compare:
 
 - **CAML**: Convolutional Attention for Multi-Label classification (CNN + per-label attention)
-- **LED**: Longformer Encoder-Decoder for long document understanding (up to 16k tokens)
+- **Longformer**: Long-document transformer for processing long clinical documents (up to 4k tokens)
 
 ## Setup
 
@@ -25,10 +25,10 @@ pip install -r requirements.txt
 
 ### Data Preparation
 
-This project uses local MIMIC-III/IV data files. You need PhysioNet credentialed access to MIMIC:
+This project uses local MIMIC-III data files. You need PhysioNet credentialed access to MIMIC:
 
 1. **Apply for MIMIC Access** (see `MIMIC_ACCESS_GUIDE.md`)
-2. **Download MIMIC Data** to `MIMIC_DATA/` directory
+2. **Download MIMIC-III Data** to `MIMIC_DATA/MIMIC-III/` directory
 3. **Process Data** into training format
 
 ```bash
@@ -53,13 +53,12 @@ icd/
 │   └── athena_extraction.py # Data loading utilities (local & AWS)
 ├── models/                  # Model architectures
 │   ├── caml.py              # CAML implementation
-│   └── led_classifier.py    # LED classifier
+│   └── longformer_classifier.py    # Longformer classifier
 ├── training/                # Training infrastructure
 │   ├── trainer.py           # Training loop
 │   └── losses.py            # Loss functions
 ├── evaluation/              # Evaluation metrics
-│   ├── metrics.py           # F1, P@k, ROC-AUC
-│   └── cross_dataset.py     # Cross-dataset evaluation
+│   └── metrics.py           # F1, P@k, ROC-AUC
 ├── utils/                   # Utilities
 │   └── config.py            # Configuration management
 ├── configs/                 # Experiment configs
@@ -67,16 +66,12 @@ icd/
 ├── scripts/                 # Executable scripts
 │   ├── process_mimic3_local.py  # Process local MIMIC-III data
 │   ├── train_caml.py
-│   ├── train_led.py
+│   ├── train_longformer.py
 │   └── evaluate.py
 ├── MIMIC_DATA/             # Local MIMIC data (git-ignored)
-│   ├── MIMIC-III/
-│   │   ├── NOTEEVENTS.csv.gz
-│   │   ├── DIAGNOSES_ICD.csv.gz
-│   │   └── ...
-│   └── MIMIC-IV/
-│       ├── discharge.csv.gz  (when available)
-│       ├── diagnoses_icd.csv.gz
+│   └── MIMIC-III/
+│       ├── NOTEEVENTS.csv.gz
+│       ├── DIAGNOSES_ICD.csv.gz
 │       └── ...
 └── data/processed/          # Processed parquet files
     ├── mimic3_full.parquet
@@ -110,12 +105,12 @@ python scripts/train_caml.py \
     --device cuda
 ```
 
-### 3. Train LED Model
+### 3. Train Longformer Model
 
 ```bash
-python scripts/train_led.py \
+python scripts/train_longformer.py \
     --data data/processed/mimic3_full.parquet \
-    --output-dir checkpoints/led_mimic3 \
+    --output-dir checkpoints/longformer_mimic3 \
     --epochs 10 \
     --batch-size 4 \
     --gradient-accumulation 8 \
@@ -139,13 +134,6 @@ python scripts/evaluate.py \
 - **Precision@k**: Precision at top-k predictions (k=5, 10)
 - **ROC-AUC**: Per-label AUC for top-50 frequent codes
 - **Stratified Analysis**: Performance breakdown by label frequency (head/medium/tail)
-
-## Interpretability
-
-- Token-level attention heatmaps
-- Integrated Gradients attribution
-- Section-level correlation analysis
-- Highlight Overlap@k metrics
 
 ## References
 

@@ -77,8 +77,8 @@ if [ $? -eq 0 ]; then
     echo "2. Navigate and submit job:"
     echo "   cd ~/icd_project"
     echo "   mkdir -p logs"
-    echo "   chmod +x slurm_train_led_quick.sh"
-    echo "   sbatch slurm_train_led_quick.sh"
+    echo "   chmod +x slurm_train_longformer_quick.sh"
+    echo "   sbatch slurm_train_longformer_quick.sh"
     echo ""
 else
     echo ""

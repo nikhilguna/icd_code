@@ -1,7 +1,7 @@
 """
 PyTorch Dataset and DataLoader for ICD code prediction.
 
-Provides efficient data loading for both CAML and LED models with:
+Provides efficient data loading for both CAML and Longformer models with:
 - Multi-label binary targets
 - Variable length handling
 - Stratified train/val/test splitting

@@ -1,8 +1,8 @@
 """
-LED (Longformer Encoder-Decoder) classifier for ICD code prediction.
+Longformer classifier for ICD code prediction.
 
 Uses the Longformer architecture for handling long clinical documents
-(up to 16,384 tokens) with sliding window + global attention.
+(up to 4,096 tokens) with sliding window + global attention.
 
 Based on: "Longformer: The Long-Document Transformer" (Beltagy et al., 2020)
 """
@@ -23,7 +23,7 @@ from transformers import (
 logger = logging.getLogger(__name__)
 
 
-class LEDClassifier(nn.Module):
+class LongformerClassifier(nn.Module):
     """
     Longformer-based classifier for multi-label ICD code prediction.
     
@@ -33,7 +33,7 @@ class LEDClassifier(nn.Module):
     - Classification head for multi-label prediction
     
     Usage:
-        model = LEDClassifier(
+        model = LongformerClassifier(
             num_labels=50,
             model_name="allenai/longformer-base-4096",
             freeze_layers=6,
@@ -56,7 +56,7 @@ class LEDClassifier(nn.Module):
         gradient_checkpointing: bool = False,
     ):
         """
-        Initialize LED classifier.
+        Initialize Longformer classifier.
         
         Args:
             num_labels: Number of ICD codes to predict
@@ -255,7 +255,7 @@ class LEDClassifier(nn.Module):
         layer: int = -1,
     ) -> torch.Tensor:
         """
-        Get attention weights from a specific layer.
+        Get attention weights for interpretability.
         
         Args:
             input_ids: Token IDs
@@ -283,16 +283,16 @@ class LEDClassifier(nn.Module):
         cls,
         num_labels: int,
         config: Any,
-    ) -> "LEDClassifier":
+    ) -> "LongformerClassifier":
         """
-        Create LEDClassifier from a config object.
+        Create LongformerClassifier from a config object.
         
         Args:
             num_labels: Number of labels
-            config: Config object with LED settings
+            config: Config object with Longformer settings
             
         Returns:
-            Initialized LEDClassifier
+            Initialized LongformerClassifier
         """
         return cls(
             num_labels=num_labels,
@@ -304,9 +304,9 @@ class LEDClassifier(nn.Module):
         )
 
 
-class LEDWithLabelAttention(nn.Module):
+class LongformerWithLabelAttention(nn.Module):
     """
-    LED variant with per-label attention (similar to CAML).
+    Longformer variant with per-label attention (similar to CAML).
     
     Instead of using just the CLS token, this model computes
     label-specific attention over the Longformer outputs.
@@ -407,9 +407,9 @@ class LEDWithLabelAttention(nn.Module):
         return result
 
 
-class LEDForSequenceClassification(nn.Module):
+class LongformerForSequenceClassification(nn.Module):
     """
-    Simpler LED classifier using mean pooling over all tokens.
+    Simpler Longformer classifier using mean pooling over all tokens.
     
     Alternative to CLS-based classification.
     """

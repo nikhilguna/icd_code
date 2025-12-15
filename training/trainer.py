@@ -45,7 +45,7 @@ class Trainer:
     """
     Trainer for ICD code prediction models.
     
-    Supports CAML and LED models with:
+    Supports CAML and Longformer models with:
     - Mixed precision training
     - Gradient accumulation
     - Early stopping

@@ -168,8 +168,8 @@ def main():
     logger.info("\n✅ Next steps:")
     logger.info("1. Train CAML model:")
     logger.info(f"   python scripts/train_caml.py --data {output_path} --epochs 50 --top-k-codes 50")
-    logger.info("\n2. Train LED model:")
-    logger.info(f"   python scripts/train_led.py --data {output_path} --epochs 10 --top-k-codes 50")
+    logger.info("\n2. Train Longformer model:")
+    logger.info(f"   python scripts/train_longformer.py --data {output_path} --epochs 10 --top-k-codes 50")
     logger.info("\n3. Evaluate model:")
     logger.info(f"   python scripts/evaluate.py --model caml --checkpoint checkpoints/caml/best_model.pt --data {output_path}")
 

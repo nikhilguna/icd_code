@@ -3,7 +3,6 @@
 # Data settings
 data:
   mimic3_database: "mimiciii"
-  mimic4_database: "mimiciv"
   athena_output_bucket: "s3://your-bucket/athena-results/"
   raw_data_dir: "data/raw/"
   processed_data_dir: "data/processed/"
@@ -21,7 +20,7 @@ labels:
 # Preprocessing
 preprocessing:
   max_length_caml: 4096
-  max_length_led: 16384
+  max_length_longformer: 4096
   lowercase: true
   remove_deidentified: true  # Remove [**...**] placeholders
   remove_numbers: false
@@ -35,9 +34,9 @@ caml:
   dropout: 0.2
   use_pretrained_embeddings: false  # Set true to use BioWordVec
 
-# LED model
-led:
-  model_name: "allenai/led-base-16384"
+# Longformer model
+longformer:
+  model_name: "allenai/longformer-base-4096"
   hidden_dim: 768
   dropout: 0.1
   freeze_layers: 6  # Freeze bottom N layers
@@ -54,8 +53,8 @@ training:
     patience: 5  # Early stopping patience
     gradient_clip: 1.0
   
-  # LED training
-  led:
+  # Longformer training
+  longformer:
     batch_size: 4
     gradient_accumulation_steps: 8  # Effective batch size = 32
     learning_rate: 0.00002
@@ -79,16 +78,6 @@ evaluation:
     head: 1000  # Codes appearing >= 1000 times
     medium: 100  # Codes appearing >= 100 times
     tail: 0     # All other codes
-
-# Interpretability
-interpretability:
-  top_k_tokens: 50  # Number of top tokens to highlight
-  attention_entropy: true
-  integrated_gradients:
-    n_steps: 50
-    internal_batch_size: 8
-  highlight_overlap:
-    sections: ["HISTORY OF PRESENT ILLNESS", "HOSPITAL COURSE", "DISCHARGE DIAGNOSIS", "MEDICATIONS"]
 
 # Logging and checkpoints
 logging:

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=led_mimic3_full
+#SBATCH --job-name=longformer_mimic3_full
 #SBATCH --account=stats_dept1
 #SBATCH --partition=gpu
 #SBATCH --nodes=1
@@ -8,8 +8,8 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=48:00:00
-#SBATCH --output=logs/led_mimic3_full_%j.log
-#SBATCH --error=logs/led_mimic3_full_%j.err
+#SBATCH --output=logs/longformer_mimic3_full_%j.log
+#SBATCH --error=logs/longformer_mimic3_full_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=nikhilvg@umich.edu
 
@@ -45,8 +45,8 @@ pip install -r requirements.txt
 
 # Create necessary directories
 mkdir -p logs
-mkdir -p checkpoints/led_mimic3_full
-mkdir -p results/led_mimic3_full
+mkdir -p checkpoints/longformer_mimic3_full
+mkdir -p results/longformer_mimic3_full
 
 # Set environment variables for optimal performance
 export TOKENIZERS_PARALLELISM=false
@@ -62,7 +62,7 @@ echo "=========================================="
 echo ""
 
 # Run training
-echo "Starting LED training on full MIMIC-III dataset..."
+echo "Starting Longformer training on full MIMIC-III dataset..."
 echo "Configuration:"
 echo "  - Dataset: mimic3_full.parquet"
 echo "  - Epochs: 5"
@@ -73,9 +73,9 @@ echo "  - Max length: 4096"
 echo "  - Freeze layers: 9"
 echo ""
 
-python scripts/train_led.py \
+python scripts/train_longformer.py \
     --data data/processed/mimic3_full.parquet \
-    --output-dir checkpoints/led_mimic3_full \
+    --output-dir checkpoints/longformer_mimic3_full \
     --epochs 5 \
     --batch-size 8 \
     --gradient-accumulation 2 \
@@ -96,10 +96,10 @@ if [ $TRAIN_EXIT_CODE -eq 0 ]; then
     # Run evaluation on test set
     echo "Running evaluation on test set..."
     python scripts/evaluate.py \
-        --model led \
-        --checkpoint checkpoints/led_mimic3_full/best_model.pt \
+        --model longformer \
+        --checkpoint checkpoints/longformer_mimic3_full/best_model.pt \
         --data data/processed/mimic3_full.parquet \
-        --output-dir results/led_mimic3_full \
+        --output-dir results/longformer_mimic3_full \
         --device cuda \
         --num-workers 4 \
         --batch-size 16
@@ -110,14 +110,14 @@ if [ $TRAIN_EXIT_CODE -eq 0 ]; then
         echo ""
         echo "=========================================="
         echo "Evaluation completed successfully!"
-        echo "Results saved to: results/led_mimic3_full/"
+        echo "Results saved to: results/longformer_mimic3_full/"
         echo "=========================================="
         echo ""
         
         # Print results summary
-        if [ -f "results/led_mimic3_full/results.json" ]; then
+        if [ -f "results/longformer_mimic3_full/results.json" ]; then
             echo "Results Summary:"
-            cat results/led_mimic3_full/results.json
+            cat results/longformer_mimic3_full/results.json
         fi
     else
         echo "Evaluation failed with exit code: $EVAL_EXIT_CODE"

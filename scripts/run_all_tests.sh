@@ -16,7 +16,7 @@ echo "  1. Generate mock data"
 echo "  2. Test preprocessing"
 echo "  3. Test data pipeline"
 echo "  4. Test CAML model"
-echo "  5. Test LED model"
+echo "  5. Test Longformer model"
 echo ""
 read -p "Press Enter to continue..."
 
@@ -49,9 +49,9 @@ python scripts/test_caml.py --num-labels 50
 
 echo ""
 echo "======================================================================"
-echo "PHASE 5: TEST LED MODEL"
+echo "PHASE 5: TEST LONGFORMER MODEL"
 echo "======================================================================"
-python scripts/test_led.py --num-labels 50 --max-length 512
+python scripts/test_longformer.py --num-labels 50 --max-length 512
 
 echo ""
 echo "======================================================================"
@@ -63,7 +63,7 @@ echo "  ✅ Mock data generated"
 echo "  ✅ Preprocessing validated"
 echo "  ✅ Data pipeline working"
 echo "  ✅ CAML model functional"
-echo "  ✅ LED model functional"
+  echo "  ✅ Longformer model functional"
 echo ""
 echo "Your ICD coding pipeline is ready!"
 echo ""

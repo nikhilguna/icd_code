@@ -20,9 +20,6 @@ scispacy>=0.5.3
 boto3>=1.28.0
 awswrangler>=3.4.0
 
-# Interpretability
-captum>=0.6.0
-
 # Visualization
 matplotlib>=3.7.0
 seaborn>=0.12.0

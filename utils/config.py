@@ -10,7 +10,6 @@ import yaml
 class DataConfig:
     """Data-related configuration."""
     mimic3_database: str = "mimiciii"
-    mimic4_database: str = "mimiciv"
     athena_output_bucket: str = "s3://your-bucket/athena-results/"
     raw_data_dir: str = "data/raw/"
     processed_data_dir: str = "data/processed/"
@@ -32,7 +31,7 @@ class LabelConfig:
 class PreprocessingConfig:
     """Preprocessing configuration."""
     max_length_caml: int = 4096
-    max_length_led: int = 16384
+    max_length_longformer: int = 4096
     lowercase: bool = True
     remove_deidentified: bool = True
     remove_numbers: bool = False
@@ -50,9 +49,9 @@ class CAMLConfig:
 
 
 @dataclass
-class LEDConfig:
-    """LED model configuration."""
-    model_name: str = "allenai/led-base-16384"
+class LongformerConfig:
+    """Longformer model configuration."""
+    model_name: str = "allenai/longformer-base-4096"
     hidden_dim: int = 768
     dropout: float = 0.1
     freeze_layers: int = 6
@@ -89,21 +88,6 @@ class EvaluationConfig:
 
 
 @dataclass
-class InterpretabilityConfig:
-    """Interpretability configuration."""
-    top_k_tokens: int = 50
-    attention_entropy: bool = True
-    ig_n_steps: int = 50
-    ig_internal_batch_size: int = 8
-    highlight_sections: List[str] = field(default_factory=lambda: [
-        "HISTORY OF PRESENT ILLNESS",
-        "HOSPITAL COURSE", 
-        "DISCHARGE DIAGNOSIS",
-        "MEDICATIONS"
-    ])
-
-
-@dataclass
 class LoggingConfig:
     """Logging and checkpoint configuration."""
     use_wandb: bool = False
@@ -120,14 +104,14 @@ class Config:
     labels: LabelConfig = field(default_factory=LabelConfig)
     preprocessing: PreprocessingConfig = field(default_factory=PreprocessingConfig)
     caml: CAMLConfig = field(default_factory=CAMLConfig)
-    led: LEDConfig = field(default_factory=LEDConfig)
+    longformer: LongformerConfig = field(default_factory=LongformerConfig)
     training_caml: TrainingConfig = field(default_factory=lambda: TrainingConfig(
         batch_size=32,
         learning_rate=0.001,
         epochs=50,
         patience=5
     ))
-    training_led: TrainingConfig = field(default_factory=lambda: TrainingConfig(
+    training_longformer: TrainingConfig = field(default_factory=lambda: TrainingConfig(
         batch_size=4,
         learning_rate=2e-5,
         epochs=10,
@@ -137,7 +121,6 @@ class Config:
         weight_decay=0.01
     ))
     evaluation: EvaluationConfig = field(default_factory=EvaluationConfig)
-    interpretability: InterpretabilityConfig = field(default_factory=InterpretabilityConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
     device: str = "cuda"
     seed: int = 42
@@ -189,11 +172,16 @@ def load_config(config_path: Optional[str] = None) -> Config:
             if hasattr(config.caml, key):
                 setattr(config.caml, key, value)
     
-    # Update LED config
-    if "led" in yaml_config:
+    # Update Longformer config
+    if "longformer" in yaml_config:
+        for key, value in yaml_config["longformer"].items():
+            if hasattr(config.longformer, key):
+                setattr(config.longformer, key, value)
+    # Backward compatibility: also check for "led"
+    elif "led" in yaml_config:
         for key, value in yaml_config["led"].items():
-            if hasattr(config.led, key):
-                setattr(config.led, key, value)
+            if hasattr(config.longformer, key):
+                setattr(config.longformer, key, value)
     
     # Update training configs
     if "training" in yaml_config:
@@ -201,42 +189,31 @@ def load_config(config_path: Optional[str] = None) -> Config:
             for key, value in yaml_config["training"]["caml"].items():
                 if hasattr(config.training_caml, key):
                     setattr(config.training_caml, key, value)
-        if "led" in yaml_config["training"]:
+        if "longformer" in yaml_config["training"]:
+            for key, value in yaml_config["training"]["longformer"].items():
+                if hasattr(config.training_longformer, key):
+                    setattr(config.training_longformer, key, value)
+        # Backward compatibility: also check for "led"
+        elif "led" in yaml_config["training"]:
             for key, value in yaml_config["training"]["led"].items():
-                if hasattr(config.training_led, key):
-                    setattr(config.training_led, key, value)
+                if hasattr(config.training_longformer, key):
+                    setattr(config.training_longformer, key, value)
         # Common settings
         if "mixed_precision" in yaml_config["training"]:
             config.training_caml.mixed_precision = yaml_config["training"]["mixed_precision"]
-            config.training_led.mixed_precision = yaml_config["training"]["mixed_precision"]
+            config.training_longformer.mixed_precision = yaml_config["training"]["mixed_precision"]
         if "num_workers" in yaml_config["training"]:
             config.training_caml.num_workers = yaml_config["training"]["num_workers"]
-            config.training_led.num_workers = yaml_config["training"]["num_workers"]
+            config.training_longformer.num_workers = yaml_config["training"]["num_workers"]
         if "pin_memory" in yaml_config["training"]:
             config.training_caml.pin_memory = yaml_config["training"]["pin_memory"]
-            config.training_led.pin_memory = yaml_config["training"]["pin_memory"]
+            config.training_longformer.pin_memory = yaml_config["training"]["pin_memory"]
     
     # Update evaluation config
     if "evaluation" in yaml_config:
         for key, value in yaml_config["evaluation"].items():
             if hasattr(config.evaluation, key):
                 setattr(config.evaluation, key, value)
-    
-    # Update interpretability config
-    if "interpretability" in yaml_config:
-        interp = yaml_config["interpretability"]
-        if "top_k_tokens" in interp:
-            config.interpretability.top_k_tokens = interp["top_k_tokens"]
-        if "attention_entropy" in interp:
-            config.interpretability.attention_entropy = interp["attention_entropy"]
-        if "integrated_gradients" in interp:
-            ig = interp["integrated_gradients"]
-            if "n_steps" in ig:
-                config.interpretability.ig_n_steps = ig["n_steps"]
-            if "internal_batch_size" in ig:
-                config.interpretability.ig_internal_batch_size = ig["internal_batch_size"]
-        if "highlight_overlap" in interp and "sections" in interp["highlight_overlap"]:
-            config.interpretability.highlight_sections = interp["highlight_overlap"]["sections"]
     
     # Update logging config
     if "logging" in yaml_config:
@@ -268,7 +245,6 @@ def save_config(config: Config, save_path: str) -> None:
     config_dict = {
         "data": {
             "mimic3_database": config.data.mimic3_database,
-            "mimic4_database": config.data.mimic4_database,
             "athena_output_bucket": config.data.athena_output_bucket,
             "raw_data_dir": config.data.raw_data_dir,
             "processed_data_dir": config.data.processed_data_dir,
@@ -284,7 +260,7 @@ def save_config(config: Config, save_path: str) -> None:
         },
         "preprocessing": {
             "max_length_caml": config.preprocessing.max_length_caml,
-            "max_length_led": config.preprocessing.max_length_led,
+            "max_length_longformer": config.preprocessing.max_length_longformer,
             "lowercase": config.preprocessing.lowercase,
             "remove_deidentified": config.preprocessing.remove_deidentified,
             "remove_numbers": config.preprocessing.remove_numbers,
@@ -297,12 +273,12 @@ def save_config(config: Config, save_path: str) -> None:
             "dropout": config.caml.dropout,
             "use_pretrained_embeddings": config.caml.use_pretrained_embeddings,
         },
-        "led": {
-            "model_name": config.led.model_name,
-            "hidden_dim": config.led.hidden_dim,
-            "dropout": config.led.dropout,
-            "freeze_layers": config.led.freeze_layers,
-            "use_global_attention": config.led.use_global_attention,
+        "longformer": {
+            "model_name": config.longformer.model_name,
+            "hidden_dim": config.longformer.hidden_dim,
+            "dropout": config.longformer.dropout,
+            "freeze_layers": config.longformer.freeze_layers,
+            "use_global_attention": config.longformer.use_global_attention,
         },
         "training": {
             "caml": {
@@ -313,15 +289,15 @@ def save_config(config: Config, save_path: str) -> None:
                 "patience": config.training_caml.patience,
                 "gradient_clip": config.training_caml.gradient_clip,
             },
-            "led": {
-                "batch_size": config.training_led.batch_size,
-                "gradient_accumulation_steps": config.training_led.gradient_accumulation_steps,
-                "learning_rate": config.training_led.learning_rate,
-                "weight_decay": config.training_led.weight_decay,
-                "epochs": config.training_led.epochs,
-                "patience": config.training_led.patience,
-                "warmup_ratio": config.training_led.warmup_ratio,
-                "gradient_clip": config.training_led.gradient_clip,
+            "longformer": {
+                "batch_size": config.training_longformer.batch_size,
+                "gradient_accumulation_steps": config.training_longformer.gradient_accumulation_steps,
+                "learning_rate": config.training_longformer.learning_rate,
+                "weight_decay": config.training_longformer.weight_decay,
+                "epochs": config.training_longformer.epochs,
+                "patience": config.training_longformer.patience,
+                "warmup_ratio": config.training_longformer.warmup_ratio,
+                "gradient_clip": config.training_longformer.gradient_clip,
             },
             "mixed_precision": config.training_caml.mixed_precision,
             "num_workers": config.training_caml.num_workers,
@@ -332,17 +308,6 @@ def save_config(config: Config, save_path: str) -> None:
             "compute_roc_auc": config.evaluation.compute_roc_auc,
             "stratified_analysis": config.evaluation.stratified_analysis,
             "frequency_bins": config.evaluation.frequency_bins,
-        },
-        "interpretability": {
-            "top_k_tokens": config.interpretability.top_k_tokens,
-            "attention_entropy": config.interpretability.attention_entropy,
-            "integrated_gradients": {
-                "n_steps": config.interpretability.ig_n_steps,
-                "internal_batch_size": config.interpretability.ig_internal_batch_size,
-            },
-            "highlight_overlap": {
-                "sections": config.interpretability.highlight_sections,
-            },
         },
         "logging": {
             "use_wandb": config.logging.use_wandb,

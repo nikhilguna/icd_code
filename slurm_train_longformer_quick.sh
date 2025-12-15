@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=led_mimic3_quick
+#SBATCH --job-name=longformer_mimic3_quick
 #SBATCH --account=stats_dept1
 #SBATCH --partition=gpu
 #SBATCH --nodes=1
@@ -8,8 +8,8 @@
 #SBATCH --mem=16G
 #SBATCH --gres=gpu:1
 #SBATCH --time=12:00:00
-#SBATCH --output=logs/led_mimic3_quick_%j.log
-#SBATCH --error=logs/led_mimic3_quick_%j.err
+#SBATCH --output=logs/longformer_mimic3_quick_%j.log
+#SBATCH --error=logs/longformer_mimic3_quick_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=nikhilvg@umich.edu
 
@@ -42,7 +42,7 @@ pip install --upgrade pip -q
 pip install -r requirements.txt -q
 
 # Create directories
-mkdir -p logs checkpoints/led_mimic3_quick results/led_mimic3_quick
+mkdir -p logs checkpoints/longformer_mimic3_quick results/longformer_mimic3_quick
 
 # Set environment variables
 export TOKENIZERS_PARALLELISM=false
@@ -51,13 +51,13 @@ export TOKENIZERS_PARALLELISM=false
 nvidia-smi --query-gpu=name,memory.total,memory.free --format=csv
 
 echo ""
-echo "Starting QUICK LED training (3 epochs)..."
+echo "Starting QUICK Longformer training (3 epochs)..."
 echo ""
 
 # Run quick training
-python scripts/train_led.py \
+python scripts/train_longformer.py \
     --data data/processed/mimic3_full.parquet \
-    --output-dir checkpoints/led_mimic3_quick \
+    --output-dir checkpoints/longformer_mimic3_quick \
     --epochs 3 \
     --batch-size 8 \
     --gradient-accumulation 2 \
@@ -70,18 +70,18 @@ if [ $? -eq 0 ]; then
     echo "Training successful! Running evaluation..."
     
     python scripts/evaluate.py \
-        --model led \
-        --checkpoint checkpoints/led_mimic3_quick/best_model.pt \
+        --model longformer \
+        --checkpoint checkpoints/longformer_mimic3_quick/best_model.pt \
         --data data/processed/mimic3_full.parquet \
-        --output-dir results/led_mimic3_quick \
+        --output-dir results/longformer_mimic3_quick \
         --device cuda \
         --num-workers 4 \
         --batch-size 16
     
-    if [ -f "results/led_mimic3_quick/results.json" ]; then
+    if [ -f "results/longformer_mimic3_quick/results.json" ]; then
         echo ""
         echo "Results:"
-        cat results/led_mimic3_quick/results.json
+        cat results/longformer_mimic3_quick/results.json
     fi
 fi
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Train LED (Longformer) model for ICD code prediction.
+Train Longformer model for ICD code prediction.
 
 Usage:
-    python scripts/train_led.py --config configs/default.yaml
-    python scripts/train_led.py --data data/processed/mimic3.parquet --epochs 10
+    python scripts/train_longformer.py --config configs/default.yaml
+    python scripts/train_longformer.py --data data/processed/mimic3.parquet --epochs 10
 """
 
 import argparse
@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from data.dataset import load_mimic_data, create_dataloaders
 from data.label_encoder import ICDLabelEncoder
-from models.led_classifier import LEDClassifier
+from models.longformer_classifier import LongformerClassifier
 from training.trainer import Trainer, create_optimizer, create_scheduler
 from training.losses import get_loss_function
 from utils.config import load_config
@@ -32,11 +32,11 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Train LED model")
+    parser = argparse.ArgumentParser(description="Train Longformer model")
     
     parser.add_argument("--config", type=str, help="Path to config file")
     parser.add_argument("--data", type=str, help="Path to processed data parquet")
-    parser.add_argument("--output-dir", type=str, default="checkpoints/led")
+    parser.add_argument("--output-dir", type=str, default="checkpoints/longformer")
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--gradient-accumulation", type=int, default=8)
@@ -120,7 +120,7 @@ def main():
     logger.info(f"Num labels: {label_encoder.num_labels}")
     
     # Create model
-    model = LEDClassifier(
+    model = LongformerClassifier(
         num_labels=label_encoder.num_labels,
         model_name=args.model_name,
         dropout=args.dropout,

@@ -7,13 +7,6 @@ Usage:
     python scripts/evaluate.py --model caml \
         --checkpoint checkpoints/caml/best_model.pt \
         --data data/processed/mimic3.parquet
-    
-    # Cross-dataset evaluation
-    python scripts/evaluate.py --model caml \
-        --checkpoint checkpoints/caml/best_model.pt \
-        --source-data data/processed/mimic3.parquet \
-        --target-data data/processed/mimic4.parquet \
-        --cross-dataset
 """
 
 import argparse
@@ -32,9 +25,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.dataset import load_mimic_data, create_dataloaders
 from data.label_encoder import ICDLabelEncoder
 from models.caml import CAML
-from models.led_classifier import LEDClassifier
+from models.longformer_classifier import LongformerClassifier
 from evaluation.metrics import ICDMetrics, per_label_metrics, find_optimal_threshold
-from evaluation.cross_dataset import evaluate_model_cross_dataset, analyze_prediction_shift
 
 logging.basicConfig(
     level=logging.INFO,
@@ -57,8 +49,8 @@ def load_model(model_type: str, checkpoint_path: str, num_labels: int, device: s
             num_labels=num_labels,
             pad_token_id=tokenizer.pad_token_id or 0,
         )
-    elif model_type == "led":
-        model = LEDClassifier(
+    elif model_type == "longformer" or model_type == "led":  # Support both for backward compatibility
+        model = LongformerClassifier(
             num_labels=num_labels,
             model_name="allenai/longformer-base-4096",
         )
@@ -137,7 +129,8 @@ def evaluate_single_dataset(
 def main():
     parser = argparse.ArgumentParser(description="Evaluate ICD prediction model")
     
-    parser.add_argument("--model", choices=["caml", "led"], required=True)
+    parser.add_argument("--model", choices=["caml", "longformer", "led"], required=True,
+                        help="Model type: 'caml' or 'longformer' (or 'led' for backward compatibility)")
     parser.add_argument("--checkpoint", type=str, required=True)
     parser.add_argument("--data", type=str, help="Path to test data")
     parser.add_argument("--encoder", type=str, help="Path to label encoder")
@@ -149,11 +142,6 @@ def main():
                         help="Device: 'auto' (default), 'mps', 'cuda', or 'cpu'")
     parser.add_argument("--top-k-codes", type=int, default=50)
     parser.add_argument("--max-length", type=int, default=4096)
-    
-    # Cross-dataset evaluation
-    parser.add_argument("--cross-dataset", action="store_true")
-    parser.add_argument("--source-data", type=str, help="Source dataset (MIMIC-III)")
-    parser.add_argument("--target-data", type=str, help="Target dataset (MIMIC-IV)")
     
     args = parser.parse_args()
     
@@ -193,61 +181,21 @@ def main():
     
     tokenizer_name = "allenai/longformer-base-4096"
     
-    if args.cross_dataset:
-        if not args.source_data or not args.target_data:
-            parser.error("--source-data and --target-data required for cross-dataset eval")
-        
-        # Load source dataset
-        source_df, _ = load_mimic_data(args.source_data, label_encoder=label_encoder)
-        _, _, source_test, _ = create_dataloaders(
-            source_df, label_encoder, tokenizer_name,
-            max_length=args.max_length, batch_size=args.batch_size,
-            num_workers=args.num_workers,
-        )
-        
-        # Load target dataset
-        target_df, _ = load_mimic_data(args.target_data, label_encoder=label_encoder)
-        _, _, target_test, _ = create_dataloaders(
-            target_df, label_encoder, tokenizer_name,
-            max_length=args.max_length, batch_size=args.batch_size,
-            num_workers=args.num_workers,
-        )
-        
-        # Cross-dataset evaluation
-        results = evaluate_model_cross_dataset(
-            model, source_test, target_test, label_encoder, args.device
-        )
-        
-        # Analyze prediction shift
-        shift_df = analyze_prediction_shift(
-            model, source_test, target_test, label_encoder, args.device
-        )
-        
-        # Save results
-        output_dir = Path(args.output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        
-        with open(output_dir / "cross_dataset_results.json", "w") as f:
-            json.dump(results["comparison"], f, indent=2, default=str)
-        
-        shift_df.to_csv(output_dir / "prediction_shift.csv", index=False)
-        
-    else:
-        if not args.data:
-            parser.error("--data required for single dataset evaluation")
-        
-        # Load dataset
-        df, _ = load_mimic_data(args.data, label_encoder=label_encoder)
-        _, _, test_loader, _ = create_dataloaders(
-            df, label_encoder, tokenizer_name,
-            max_length=args.max_length, batch_size=args.batch_size,
-            num_workers=args.num_workers,
-        )
-        
-        # Evaluate
-        evaluate_single_dataset(
-            model, test_loader, label_encoder, args.device, args.output_dir
-        )
+    if not args.data:
+        parser.error("--data required for evaluation")
+    
+    # Load dataset
+    df, _ = load_mimic_data(args.data, label_encoder=label_encoder)
+    _, _, test_loader, _ = create_dataloaders(
+        df, label_encoder, tokenizer_name,
+        max_length=args.max_length, batch_size=args.batch_size,
+        num_workers=args.num_workers,
+    )
+    
+    # Evaluate
+    evaluate_single_dataset(
+        model, test_loader, label_encoder, args.device, args.output_dir
+    )
 
 
 if __name__ == "__main__":

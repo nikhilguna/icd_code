@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test LED (Longformer) classifier.
+Test Longformer classifier.
 
 Tests:
 - Model initialization with pretrained Longformer
@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import torch
 import torch.nn as nn
-from models.led_classifier import LEDClassifier
+from models.longformer_classifier import LongformerClassifier
 
 
 def test_initialization(num_labels, model_name="allenai/longformer-base-4096"):
@@ -30,7 +30,7 @@ def test_initialization(num_labels, model_name="allenai/longformer-base-4096"):
     print(f"  Loading pretrained Longformer: {model_name}")
     print(f"  This may take a minute on first run...")
     
-    model = LEDClassifier(
+    model = LongformerClassifier(
         num_labels=num_labels,
         model_name=model_name,
         freeze_layers=0,  # Don't freeze for testing
@@ -281,7 +281,7 @@ def test_training_steps(model, num_labels, num_steps=5):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Test LED model")
+    parser = argparse.ArgumentParser(description="Test Longformer model")
     parser.add_argument(
         "--num-labels",
         type=int,
@@ -309,7 +309,7 @@ def main():
     args = parser.parse_args()
     
     print("="*60)
-    print("LED (LONGFORMER) MODEL TEST")
+    print("LONGFORMER MODEL TEST")
     print("="*60)
     print(f"Number of labels: {args.num_labels}")
     print(f"Model: {args.model_name}")
@@ -351,7 +351,7 @@ def main():
     print("TEST SUMMARY")
     print("="*60)
     print("✅ ALL TESTS PASSED")
-    print("\nLED model is working correctly!")
+    print("\nLongformer model is working correctly!")
     print("\nNext steps:")
     print("  python scripts/test_training.py --model led --data-dir mock_data/raw/")
     
